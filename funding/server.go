@@ -31,7 +31,6 @@ func NewFundServer(initialBalance int) *FundServer {
 
 func (s *FundServer) loop() {
 	for command := range s.Commands {
-		fmt.Println(command)
 		switch command.(type) {
 		case WithdrawCommand:
 			withdrawal := command.(WithdrawCommand)
