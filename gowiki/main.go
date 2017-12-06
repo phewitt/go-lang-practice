@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -42,7 +43,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 		return
 	}
 	escapedBody := []byte(template.HTMLEscapeString(string(p.Body)))
-
+	fmt.Println(string(escapedBody))
 	p.DisplayBody = template.HTML(linkRegexp.ReplaceAllFunc(escapedBody, func(str []byte) []byte {
 		matched := linkRegexp.FindStringSubmatch(string(str))
 		out := []byte("<a href=\"/view/" + matched[1] + "\">" + matched[1] + "</a>")
