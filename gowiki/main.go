@@ -1,9 +1,14 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
+	"regexp"
 )
+
+var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-0]+)$")
 
 func main() {
 	http.HandleFunc("/view/", viewHandler)
@@ -12,8 +17,20 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
+func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
+	m := validPath.FindStringSubmatch(r.URL.Path)
+	if m == nil {
+		http.NotFound(w, r)
+		return "", errors.New("Invalid Page Title")
+	}
+	return m[2], nil
+}
+
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/view/"):]
+	title, err := getTitle(w, r)
+	if err != nil {
+		return
+	}
 	p, err := loadPage(title)
 	if err != nil {
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
@@ -23,7 +40,11 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[len("/edit/"):]
+	title, err := getTitle(w, r)
+	if err != nil {
+		return
+	}
+
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -44,13 +65,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, err := template.ParseFiles(tmpl + ".html")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = t.Execute(w, p)
+	err := templates.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
