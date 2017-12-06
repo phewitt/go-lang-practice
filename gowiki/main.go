@@ -7,7 +7,8 @@ import (
 	"regexp"
 )
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+var pathToTemplates = "tmpl/"
+var templates = template.Must(template.ParseFiles(pathToTemplates+"edit.html", pathToTemplates+"view.html"))
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-0]+)$")
 
 func main() {
